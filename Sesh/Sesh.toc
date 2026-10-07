@@ -8,6 +8,7 @@
 ## SavedVariablesPerCharacter: SeshCharDB
 ## OptionalDeps: Auctionator, EllesmereUI
 ## X-License: MIT
+## X-Curse-Project-ID: 1732631
 
 Core\Namespace.lua
 Locales\enUS.lua
