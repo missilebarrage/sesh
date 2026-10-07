@@ -1,0 +1,92 @@
+local Helpers = dofile(HARNESS_DIR .. "/helpers.lua")
+local LocalTime = Helpers.LocalTime
+
+local function Midnight(year, month, day)
+	return os.time({ year = year, month = month, day = day, hour = 0, min = 0, sec = 0 })
+end
+
+describe("History", function()
+	local function Setup(now)
+		local world, ns = Harness.Load({ now = now })
+		world:Fire("ADDON_LOADED", "Sesh")
+		return world, ns
+	end
+
+	it("adds, finds and deletes sessions while keeping the lifetime rollup consistent", function()
+		local _, ns = Setup()
+		ns.History.Add(Helpers.Record(ns, { id = 1, startedAt = 1000, money = 100, kills = 3 }))
+		ns.History.Add(Helpers.Record(ns, { id = 2, startedAt = 9000, money = 50, kills = 1 }))
+		ns.History.Add(Helpers.Record(ns, { id = 5, startedAt = 20000, money = 25 }))
+		expect(ns.History.Get(2).money).toBe(50)
+		expect(ns.History.Get(3)).toBeNil()
+		expect(ns.History.Lifetime().money).toBe(175)
+		expect(ns.History.Lifetime().sessionCount).toBe(3)
+
+		expect(ns.History.Delete(2)).toBe(true)
+		expect(ns.History.Delete(2)).toBe(false)
+		local lifetime = ns.History.Lifetime()
+		expect(lifetime.money).toBe(125)
+		expect(lifetime.kills).toBe(3)
+		expect(lifetime.sessionCount).toBe(2)
+
+		local incremental = ns.Session.ToRecord(lifetime)
+		ns.History.Rebuild()
+		expect(ns.Session.ToRecord(ns.History.Lifetime())).toEqual(incremental)
+
+		ns.History.DeleteAll()
+		expect(#ns.History.Sessions()).toBe(0)
+		expect(ns.History.Lifetime().sessionCount).toBe(0)
+	end)
+
+	it("computes range starts in local time", function()
+		local now = LocalTime(2026, 10, 8, 15, 30) -- Thursday
+		local _, ns = Setup(now)
+		expect(ns.History.Bounds("today", now)).toBe(Midnight(2026, 10, 8))
+		ns.Database.Set("weekStart", 1)
+		expect(ns.History.Bounds("week", now)).toBe(Midnight(2026, 10, 4))
+		ns.Database.Set("weekStart", 2)
+		expect(ns.History.Bounds("week", now)).toBe(Midnight(2026, 10, 5))
+		expect(ns.History.Bounds("month", now)).toBe(Midnight(2026, 10, 1))
+		expect(ns.History.Bounds("quarter", now)).toBe(Midnight(2026, 7, 8))
+		local from, to = ns.History.Bounds({ day = ns.Stats.DayNumber(2026, 10, 3) }, now)
+		expect(from).toBe(Midnight(2026, 10, 3))
+		expect(to).toBe(Midnight(2026, 10, 4))
+		expect(ns.History.Bounds("all", now)).toBeNil()
+	end)
+
+	it("handles a week that spans the end of daylight saving time", function()
+		local now = LocalTime(2026, 11, 4, 9, 0) -- Wednesday after the US clock change
+		local _, ns = Setup(now)
+		ns.Database.Set("weekStart", 1)
+		expect(ns.History.Bounds("week", now)).toBe(Midnight(2026, 11, 1))
+		expect(ns.History.Bounds("quarter", LocalTime(2026, 1, 15))).toBe(Midnight(2025, 10, 15))
+	end)
+
+	it("aggregates the sessions in a range and caches until history changes", function()
+		local now = LocalTime(2026, 10, 8, 15, 30)
+		local _, ns = Setup(now)
+		ns.History.Add(Helpers.Record(ns, { id = 1, startedAt = LocalTime(2026, 9, 20), money = 1 }))
+		ns.History.Add(Helpers.Record(ns, { id = 2, startedAt = LocalTime(2026, 10, 2), money = 10 }))
+		ns.History.Add(Helpers.Record(ns, { id = 3, startedAt = LocalTime(2026, 10, 8, 1), money = 100 }))
+		expect(ns.History.RangeView("today", now).money).toBe(100)
+		expect(ns.History.RangeView("month", now).money).toBe(110)
+		expect(ns.History.RangeView("quarter", now).money).toBe(111)
+		expect(ns.History.RangeView("all", now).money).toBe(111)
+		local cached = ns.History.RangeView("month", now)
+		expect(ns.History.RangeView("month", now)).toBe(cached)
+		ns.History.Delete(2)
+		expect(ns.History.RangeView("month", now).money).toBe(100)
+	end)
+
+	it("includes the live session in ranges it started in", function()
+		local now = LocalTime(2026, 10, 8, 15, 30)
+		local world, ns = Harness.Boot({ now = now })
+		Helpers.GainMoney(world, 700)
+		ns.History.Add(Helpers.Record(ns, { id = 100, startedAt = LocalTime(2026, 10, 1), money = 5 }))
+		expect(ns.History.Query("today", world.clock.server).money).toBe(700)
+		expect(ns.History.Query("month", world.clock.server).money).toBe(705)
+		expect(ns.History.Query("all", world.clock.server).sessionCount).toBe(2)
+		local yesterday = { day = ns.Stats.DayOf(now) - 1 }
+		expect(ns.History.Query(yesterday, world.clock.server).money).toBe(0)
+	end)
+end)

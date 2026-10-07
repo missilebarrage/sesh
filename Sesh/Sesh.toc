@@ -1,0 +1,49 @@
+## Interface: 16001
+## Title: Sesh
+## Notes: Stats for every play session and every level: gold and item value, XP, kills, quests, dungeons and zones.
+## Author: Tim
+## Version: @project-version@
+## IconTexture: Interface\Icons\INV_Misc_PocketWatch_01
+## SavedVariables: SeshDB
+## SavedVariablesPerCharacter: SeshCharDB
+## OptionalDeps: Auctionator, EllesmereUI
+## X-License: MIT
+
+Core\Namespace.lua
+Locales\enUS.lua
+Core\Events.lua
+Core\Database.lua
+Core\Format.lua
+Core\Names.lua
+Data\Pack.lua
+Data\Pricing.lua
+Data\Session.lua
+Data\History.lua
+Data\Stats.lua
+Data\Leveling.lua
+Tracking\Recorder.lua
+Tracking\Income.lua
+Tracking\Progress.lua
+Tracking\Activity.lua
+Tracking\Kills.lua
+Tracking\Dungeons.lua
+Share\Shares.lua
+Share\Payload.lua
+Share\Comm.lua
+Share\Links.lua
+UI\Theme.lua
+UI\Widgets.lua
+UI\Window.lua
+UI\Heatmap.lua
+UI\LevelChart.lua
+UI\SessionView.lua
+UI\HistoryView.lua
+UI\SummaryView.lua
+UI\LevelingView.lua
+UI\ShareDialog.lua
+UI\SharedSessionWindow.lua
+UI\MainWindow.lua
+UI\MiniWindow.lua
+UI\DataBroker.lua
+UI\Options.lua
+Init.lua
