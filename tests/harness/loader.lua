@@ -16,7 +16,6 @@ local ALLOWED_GLOBALS = {
 	SLASH_SESH1 = true,
 	SeshMainWindow = true,
 	SeshMiniWindow = true,
-	SeshSharedSessionWindow = true,
 	SeshShareDialog = true,
 	SeshModelPreview = true,
 	SeshFontTitle = true,

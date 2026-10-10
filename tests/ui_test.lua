@@ -219,7 +219,8 @@ describe("Share dialog", function()
 		ns.MainWindow.Share()
 		local dialog = world.env.SeshShareDialog
 		expect(dialog:IsShown()).toBe(true)
-		expect(dialog.preview:GetText()).toMatch("^%[Sesh #1%] Current Session")
+		expect(dialog.preview:GetText()).toMatch("^Current Session")
+		expect(dialog.note:GetText()).toBe(ns.L.SHARE_NOTE)
 		dialog.checkboxes.kills:Click()
 		expect(ns.Database.Get("shareFields").kills).toBeNil()
 		dialog.checkboxes.zones:Click()
@@ -228,45 +229,7 @@ describe("Share dialog", function()
 		expect(#dialog.preview:GetText() <= 255).toBe(true)
 		dialog.insert:Click()
 		expect(world.openedChat[1]).toBe(dialog.preview:GetText())
-		expect(ns.Shares.IsShared("session", 1, world.clock.server)).toBe(true)
 		expect(dialog:IsShown()).toBe(false)
-	end)
-end)
-
-describe("Shared session window", function()
-	it("requests a linked session and shows it", function()
-		local owner, ownerNs = Harness.Boot({
-			configure = function(w)
-				w.player.name = "Owner"
-			end,
-		})
-		BusySession(owner, ownerNs)
-		local id = ownerNs.Recorder.Current().id
-		ownerNs.Shares.Mark("session", id, owner.clock.server)
-		local viewer, viewerNs = Harness.Boot()
-		viewer:ClickLink("addon:Sesh:Owner-TestRealm:" .. id, "[Sesh #" .. id .. "]")
-		local window = viewer.env.SeshSharedSessionWindow
-		expect(window:IsShown()).toBe(true)
-		expect(window.status:GetText()).toBe(viewerNs.L.SHARE_REQUESTING)
-		for _, message in ipairs(viewer.addonMessages) do
-			owner:Fire("CHAT_MSG_ADDON", "Sesh", message.message, "WHISPER", "Tester-TestRealm")
-		end
-		owner:Advance(5)
-		for _, message in ipairs(owner.addonMessages) do
-			viewer:Fire("CHAT_MSG_ADDON", "Sesh", message.message, "WHISPER", "Owner-TestRealm")
-		end
-		expect(window.status:IsShown()).toBe(false)
-		expect(window.subtitle:GetText()).toBe("Shared by Owner")
-		expect(viewer.errors).toEqual({})
-		expect(owner.errors).toEqual({})
-	end)
-
-	it("explains why a session couldn't be opened", function()
-		local viewer, ns = Harness.Boot()
-		ns.SharedSessionWindow.Open("Friend-TestRealm", "session", 4)
-		viewer:Advance(11)
-		local window = viewer.env.SeshSharedSessionWindow
-		expect(window.status:GetText()).toBe(ns.L.SHARE_ERROR_TIMEOUT:format("Friend"))
 	end)
 end)
 
@@ -288,7 +251,6 @@ describe("Options", function()
 			"miniScale",
 			"miniOpacity",
 			"levelChartMetric",
-			"allowLinkRequests",
 			"brokerMetric",
 		}) do
 			expect(category.settings[key]).toBeTruthy()
@@ -367,7 +329,6 @@ describe("Localization", function()
 		local dynamic = {
 			LIST_ = { "SESSIONS", "ITEMS", "MONSTERS", "QUESTS", "ZONES", "DUNGEONS" },
 			EMPTY_ = { "SESSIONS", "ITEMS", "MONSTERS", "QUESTS", "ZONES", "DUNGEONS" },
-			SHARE_ERROR_ = { "OFF", "NF", "RL", "VER", "LOCK", "TIMEOUT", "BAD" },
 			FIELD_ = {},
 		}
 		for _, field in ipairs(ns.Links.FIELDS) do
@@ -482,7 +443,7 @@ describe("Leveling tab", function()
 		ns.MainWindow.Share()
 		local dialog = world.env.SeshShareDialog
 		expect(dialog.title:GetText()).toBe("SHARE LEVEL")
-		expect(dialog.preview:GetText()).toMatch("^%[Sesh Lv12%] Level 12, 25%% so far")
+		expect(dialog.preview:GetText()).toMatch("^Level 12, 25%% so far")
 		expect(dialog.checkboxes.levels:IsShown()).toBe(false)
 		expect(dialog.checkboxes.dungeons:IsShown()).toBe(true)
 		dialog.checkboxes.zones:Click()
@@ -492,16 +453,16 @@ describe("Leveling tab", function()
 		local view = FindWith(world.env.SeshMainWindow, "chart")
 		view:OpenLevel(10)
 		view.shareButton:Click()
-		expect(dialog.preview:GetText()).toMatch("^%[Sesh Lv10%] Level 10")
+		expect(dialog.preview:GetText()).toMatch("^Level 10")
 		dialog.insert:Click()
-		expect(ns.Shares.IsShared("level", 10, world.clock.server)).toBe(true)
+		expect(world.openedChat[1]).toMatch("^Level 10")
 
 		-- Sessions still share as sessions, with their own choices.
 		ns.MainWindow.Open("session")
 		ns.MainWindow.Share()
 		expect(dialog.title:GetText()).toBe("SHARE SESSION")
 		expect(dialog.checkboxes.levels:IsShown()).toBe(true)
-		expect(dialog.preview:GetText()).toMatch("^%[Sesh #1%]")
+		expect(dialog.preview:GetText()).toMatch("^Current Session")
 		expect(world.errors).toEqual({})
 	end)
 
@@ -518,7 +479,7 @@ describe("Leveling tab", function()
 		expect(view.chart.empty:IsShown()).toBe(true)
 		expect(view.journey:GetText()).toBe(ns.L.LEVELING_EMPTY)
 		ns.MainWindow.Share()
-		expect(world.env.SeshShareDialog.preview:GetText()).toMatch("^%[Sesh #1%]")
+		expect(world.env.SeshShareDialog.preview:GetText()).toMatch("^Current Session")
 		expect(world.errors).toEqual({})
 	end)
 

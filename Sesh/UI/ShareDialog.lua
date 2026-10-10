@@ -135,6 +135,7 @@ local function Build()
 	frame.note = Widgets.Text(content, "small", "faint")
 	frame.note:SetPoint("TOPLEFT", 0, -y)
 	frame.note:SetWidth(width)
+	frame.note:SetText(L.SHARE_NOTE)
 
 	frame.insert = Widgets.Button(content, L.SHARE_INSERT, function()
 		Links.Share(current.view, Fields())
@@ -156,7 +157,6 @@ function ShareDialog.Open(view, live)
 	end
 	current = { view = view, live = live == true }
 	frame.title:SetText(view.level and L.SHARE_LEVEL_TITLE or L.SHARE_TITLE)
-	frame.note:SetText(view.level and L.SHARE_LEVEL_NOTE or L.SHARE_NOTE)
 	LayoutCheckboxes()
 	local fields = Fields()
 	for field, checkbox in pairs(frame.checkboxes) do

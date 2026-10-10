@@ -17,7 +17,6 @@ local Database = ns.Database
 local Session = ns.Session
 local Recorder = ns.Recorder
 local Progress = ns.Progress
-local Shares = ns.Shares
 local Events = ns.Events
 
 local EMPTY = {}
@@ -199,7 +198,6 @@ function Leveling.DeleteAll(now)
 		return
 	end
 	char.levels = {}
-	Shares.ForgetAll("level")
 	local active = Recorder.Current()
 	local mark = active and active.levelMark
 	if mark then

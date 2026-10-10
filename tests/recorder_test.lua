@@ -102,3 +102,76 @@ describe("Recorder", function()
 		expect(restarted.errors).toEqual({})
 	end)
 end)
+
+describe("Character data", function()
+	-- A character that finished a session and reached level 11.
+	local function Played()
+		local world, ns = Harness.Boot()
+		Helpers.GainMoney(world, 500)
+		Helpers.SetXP(world, 11, 50, 1100)
+		world:Advance(600)
+		ns.Recorder.Split()
+		return world, ns
+	end
+
+	-- A new level 1 character that got the saved data of a deleted one with the same name.
+	local function NewCharacter(w)
+		w.player.guid = "Player-1-0000CCCC"
+		w.player.level, w.player.xp, w.player.xpMax = 1, 0, 400
+	end
+
+	local function Printed(world, text)
+		for _, line in ipairs(world.printed) do
+			if line:find(text, 1, true) then
+				return true
+			end
+		end
+		return false
+	end
+
+	it("remembers which character it belongs to", function()
+		local world, ns = Played()
+		expect(world.env.SeshCharDB.guid).toBe("Player-1-0000AAAA")
+		local again, againNs = Harness.Restart(world, { gap = 86400 })
+		expect(againNs.History.Get(1)).toBeTruthy()
+		expect(Printed(again, ns.L.CHARACTER_REPLACED)).toBe(false)
+	end)
+
+	it("starts over for a new character with the name of a deleted one", function()
+		local world = Played()
+		local fresh, ns = Harness.Restart(world, { gap = 86400, configure = NewCharacter })
+		expect(ns.History.Sessions()).toEqual({})
+		expect(ns.Leveling.Records()).toEqual({})
+		expect(ns.Recorder.Current().id).toBe(1)
+		expect(ns.Recorder.Current().startLevel).toBe(1)
+		expect(fresh.env.SeshCharDB.guid).toBe("Player-1-0000CCCC")
+		expect(Printed(fresh, ns.L.CHARACTER_REPLACED)).toBe(true)
+		expect(fresh.errors).toEqual({})
+	end)
+
+	it("keeps data saved before 0.2.0 unless it has seen a higher level", function()
+		local world = Played()
+		world.env.SeshCharDB.guid = nil
+		local same, sameNs = Harness.Restart(world, { gap = 86400 })
+		expect(sameNs.History.Get(1)).toBeTruthy()
+		expect(same.env.SeshCharDB.guid).toBe("Player-1-0000AAAA")
+
+		same.env.SeshCharDB.guid = nil
+		local fresh, freshNs = Harness.Restart(same, { gap = 86400, configure = NewCharacter })
+		expect(freshNs.History.Sessions()).toEqual({})
+		expect(fresh.env.SeshCharDB.guid).toBe("Player-1-0000CCCC")
+	end)
+
+	it("leaves the data alone while the game hides who the player is", function()
+		local world = Played()
+		local hidden, ns = Harness.Restart(world, {
+			gap = 86400,
+			configure = function(w)
+				NewCharacter(w)
+				w.player.guid = Harness.Wow.SECRET
+			end,
+		})
+		expect(ns.History.Get(1)).toBeTruthy()
+		expect(hidden.env.SeshCharDB.guid).toBe("Player-1-0000AAAA")
+	end)
+end)

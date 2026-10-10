@@ -164,7 +164,19 @@ describe("Database", function()
 		expect(ns.Database.Get("resumeMinutes")).toBe(5)
 		expect(ns.Database.Get("excludeAfk")).toBe(false)
 		expect(ns.Database.Char().nextId).toBe(8)
-		expect(ns.Database.Char().shared).toEqual({})
+		expect(ns.Database.Char().levels).toEqual({})
+	end)
+
+	it("drops what earlier versions kept for other players to open", function()
+		local saved = {
+			SeshDB = { schema = 1, settings = { allowLinkRequests = false } },
+			SeshCharDB = { schema = 1, sessions = {}, shared = { [3] = 1790000000 }, sharedLevels = {} },
+		}
+		local world, ns = Harness.Load({ saved = saved })
+		ns.Database.Init()
+		expect(world.env.SeshDB.settings.allowLinkRequests).toBeNil()
+		expect(world.env.SeshCharDB.shared).toBeNil()
+		expect(world.env.SeshCharDB.sharedLevels).toBeNil()
 	end)
 
 	it("restores only valid window positions", function()

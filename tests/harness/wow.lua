@@ -90,13 +90,9 @@ function Wow.NewWorld(options)
 		quests = {},
 		achievements = {},
 		zone = { name = "Elwynn Forest", instanceType = "none" },
-		addonMessages = {},
-		sendResults = {},
-		registeredPrefixes = {},
 		chatFilters = {},
 		registryCallbacks = {},
 		popups = {},
-		chatLockdown = false,
 		combat = false,
 		loadedAddons = {},
 		missingAtlases = {},
@@ -203,130 +199,6 @@ function World:ClickLink(link, text, button)
 	for _, entry in ipairs(self.registryCallbacks.SetItemRef or {}) do
 		entry.func(entry.owner, link, text, button or "LeftButton", nil)
 	end
-end
-
-local function Base64Encode(data)
-	local alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-	local out = {}
-	for index = 1, #data, 3 do
-		local a, b, c = data:byte(index, index + 2)
-		local n = a * 65536 + (b or 0) * 256 + (c or 0)
-		local chars = {}
-		for shift = 3, 0, -1 do
-			local sextet = math.floor(n / 64 ^ shift) % 64
-			chars[#chars + 1] = alphabet:sub(sextet + 1, sextet + 1)
-		end
-		if not b then
-			chars[3], chars[4] = "=", "="
-		elseif not c then
-			chars[4] = "="
-		end
-		out[#out + 1] = table.concat(chars)
-	end
-	return table.concat(out)
-end
-
-local function Base64Decode(data)
-	local alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-	if #data % 4 ~= 0 or data:find("[^%w%+/=]") then
-		error("invalid base64")
-	end
-	local out = {}
-	for index = 1, #data, 4 do
-		local n, padding = 0, 0
-		for offset = 0, 3 do
-			local char = data:sub(index + offset, index + offset)
-			local value = 0
-			if char == "=" then
-				padding = padding + 1
-			else
-				value = alphabet:find(char, 1, true) - 1
-			end
-			n = n * 64 + value
-		end
-		local bytes = string.char(math.floor(n / 65536) % 256, math.floor(n / 256) % 256, n % 256)
-		out[#out + 1] = bytes:sub(1, 3 - padding)
-	end
-	return table.concat(out)
-end
-Wow.Base64Encode = Base64Encode
-
--- Deterministic stand-in for CBOR: tagged, length-prefixed values.
-local function Serialize(value, out)
-	local kind = type(value)
-	if kind == "nil" then
-		out[#out + 1] = "N"
-	elseif kind == "boolean" then
-		out[#out + 1] = value and "T" or "F"
-	elseif kind == "number" then
-		out[#out + 1] = "n" .. string.format("%.17g", value) .. ";"
-	elseif kind == "string" then
-		out[#out + 1] = "s" .. #value .. ":" .. value
-	elseif kind == "table" then
-		local keys = {}
-		for key in pairs(value) do
-			keys[#keys + 1] = key
-		end
-		table.sort(keys, function(a, b)
-			if type(a) == type(b) then
-				return a < b
-			end
-			return type(a) < type(b)
-		end)
-		out[#out + 1] = "{"
-		for _, key in ipairs(keys) do
-			Serialize(key, out)
-			Serialize(value[key], out)
-		end
-		out[#out + 1] = "}"
-	else
-		error("cannot serialize a " .. kind)
-	end
-end
-
-local function Deserialize(data, position)
-	local tag = data:sub(position, position)
-	if tag == "N" then
-		return nil, position + 1
-	elseif tag == "T" then
-		return true, position + 1
-	elseif tag == "F" then
-		return false, position + 1
-	elseif tag == "n" then
-		local text, after = data:match("^([^;]+);()", position + 1)
-		local number = tonumber(text)
-		if not number then
-			error("malformed number")
-		end
-		return number, after
-	elseif tag == "s" then
-		local length, start = data:match("^(%d+):()", position + 1)
-		if not length then
-			error("malformed string")
-		end
-		length = tonumber(length)
-		if start + length - 1 > #data then
-			error("truncated string")
-		end
-		return data:sub(start, start + length - 1), start + length
-	elseif tag == "{" then
-		local result = {}
-		position = position + 1
-		while data:sub(position, position) ~= "}" do
-			if position > #data then
-				error("unterminated table")
-			end
-			local key, value
-			key, position = Deserialize(data, position)
-			value, position = Deserialize(data, position)
-			if key == nil then
-				error("nil key")
-			end
-			result[key] = value
-		end
-		return result, position + 1
-	end
-	error("malformed data")
 end
 
 local function Copy(source, into)
@@ -823,12 +695,6 @@ function Wow.CreateEnvironment(world)
 			end
 		end
 	end
-	env.Ambiguate = function(name, context)
-		if context == "short" then
-			return (name:gsub("%-.*$", ""))
-		end
-		return name
-	end
 	env.GetMoney = function()
 		return world.player.money
 	end
@@ -975,28 +841,7 @@ function Wow.CreateEnvironment(world)
 		return achievementID, data.name, 10, true, 1, 1, 26, "", 0, data.icon or 236376
 	end
 
-	-- Chat and addon messages.
-	env.C_ChatInfo = {
-		RegisterAddonMessagePrefix = function(prefix)
-			world.registeredPrefixes[prefix] = true
-			return 0
-		end,
-		SendAddonMessage = function(prefix, message, chatType, target)
-			assert(#message <= 255, "addon message longer than 255 bytes")
-			local result = table.remove(world.sendResults, 1) or 0
-			world.addonMessages[#world.addonMessages + 1] = {
-				prefix = prefix,
-				message = message,
-				chatType = chatType,
-				target = target,
-				result = result,
-			}
-			return result
-		end,
-		InChatMessagingLockdown = function()
-			return world.chatLockdown
-		end,
-	}
+	-- Chat.
 	env.ChatFrameUtil = {
 		AddMessageEventFilter = function(event, filter)
 			world.chatFilters[event] = world.chatFilters[event] or {}
@@ -1048,31 +893,6 @@ function Wow.CreateEnvironment(world)
 			table.insert(world.registryCallbacks[event], { func = func, owner = owner })
 		end,
 	}
-	env.C_EncodingUtil = {
-		SerializeCBOR = function(value)
-			local out = {}
-			Serialize(value, out)
-			return table.concat(out)
-		end,
-		DeserializeCBOR = function(data)
-			local value, after = Deserialize(data, 1)
-			if after ~= #data + 1 then
-				error("trailing data")
-			end
-			return value
-		end,
-		CompressString = function(data)
-			return "Z" .. data
-		end,
-		DecompressString = function(data)
-			if data:sub(1, 1) ~= "Z" then
-				error("not compressed data")
-			end
-			return data:sub(2)
-		end,
-		EncodeBase64 = Base64Encode,
-		DecodeBase64 = Base64Decode,
-	}
 
 	env.Enum = {
 		PlayerInteractionType = {
@@ -1087,23 +907,6 @@ function Wow.CreateEnvironment(world)
 			AccountBanker = 68,
 			QuestGiver = 3,
 		},
-		SendAddonMessageResult = {
-			Success = 0,
-			InvalidPrefix = 1,
-			InvalidMessage = 2,
-			AddonMessageThrottle = 3,
-			InvalidChatType = 4,
-			NotInGroup = 5,
-			TargetRequired = 6,
-			InvalidChannel = 7,
-			ChannelThrottle = 8,
-			GeneralError = 9,
-			NotInGuild = 10,
-			AddOnMessageLockdown = 11,
-			TargetOffline = 12,
-		},
-		CompressionMethod = { Deflate = 0, Zlib = 1, Gzip = 2 },
-		CompressionLevel = { Default = 0, OptimizeForSpeed = 1, OptimizeForSize = 2 },
 	}
 
 	env.C_AddOns = {

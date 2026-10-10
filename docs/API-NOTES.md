@@ -8,12 +8,19 @@ files when the client updates.
 ## Client
 
 - TOC `## Interface: 16001`; Blizzard game type `camelot`; the UI code is the Mainline family
-  (modern `C_*` namespaces, Settings, ScrollBox, `C_EncodingUtil`).
+  (modern `C_*` namespaces, Settings, ScrollBox).
 - A plain `Sesh.toc` (no flavor suffix) loads.
 - Deprecated globals (`GetItemInfo`, `ChatFrame_*`, `ChatEdit_*`, `SendChatMessage`,
   `InterfaceOptions_*`, `CombatLogGetCurrentEventInfo`) only exist when the
   `loadDeprecationFallbacks` CVar is on. Sesh uses only the modern names.
 - `ReloadUI()` is blocked for addon code.
+
+## Saved variables
+
+- Per-character saved variables are stored by account, realm and character name, so a new
+  character with the name of a deleted one loads the deleted character's `SeshCharDB`.
+  The two have different `UnitGUID("player")` values (`Player-<server>-<character>`), so
+  `SeshCharDB.guid` tells them apart (`Database.ClaimCharacter`).
 
 ## Secret values
 
@@ -23,8 +30,8 @@ files when the client updates.
 - Unit identity (`UnitGUID`, `UnitName`, `UnitCreatureType`, `PARTY_KILL` GUIDs) is
   `SecretWhenUnitIdentityRestricted` (`UnitDocumentation.lua`).
 - Chat text events (say, party, guild, whisper, channel...) are `SecretInChatMessagingLockdown`
-  (`ChatInfoDocumentation.lua`). `CHAT_MSG_LOOT`, `CHAT_MSG_MONEY`, `CHAT_MSG_COMBAT_XP_GAIN`
-  and `CHAT_MSG_ADDON` are not flagged.
+  (`ChatInfoDocumentation.lua`). `CHAT_MSG_LOOT`, `CHAT_MSG_MONEY` and
+  `CHAT_MSG_COMBAT_XP_GAIN` are not flagged.
 
 ## Kills
 
@@ -79,18 +86,12 @@ files when the client updates.
   `C_Traits.GetTreeCurrencyInfo(C_Traits.GetConfigIDByTreeID(treeID), treeID, true)`.
   The pool is shared: points earned = change in (quantity + spent).
 
-## Chat links and sharing
+## Chat links
 
 - `LinkTypes.AddOn = "addon"`; clicks on `|Haddon:...|h` links trigger
   `EventRegistry:TriggerEvent("SetItemRef", link, text, button, frame)`
   (`Blizzard_UIPanels_Game/Shared/ItemRefHandlersShared.lua`).
-- `ChatFrameUtil.AddMessageEventFilter(event, filter)`; filters are skipped for secret text
-  (`Blizzard_ChatFrameBase/Shared/ChatFrameFilters.lua`).
 - `ChatFrameUtil.GetActiveWindow()` / `ChatFrameUtil.OpenChat(text)` to put text in the chat box.
-- `C_ChatInfo.SendAddonMessage` returns `Enum.SendAddonMessageResult` (3 and 8 throttled,
-  11 lockdown, 12 target offline); `C_ChatInfo.InChatMessagingLockdown()`.
-- `C_EncodingUtil` has SerializeCBOR/DeserializeCBOR, CompressString/DecompressString
-  (Deflate) and EncodeBase64/DecodeBase64; decompression is capped at 100 MB.
 
 ## UI
 

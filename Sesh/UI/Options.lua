@@ -179,9 +179,6 @@ local function Build(layout)
 		chartMetrics
 	)
 
-	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(L.OPTIONS_SHARING))
-	Checkbox("allowLinkRequests", L.OPTION_ALLOW_REQUESTS, L.OPTION_ALLOW_REQUESTS_TOOLTIP)
-
 	if DataBroker.IsAvailable() then
 		layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(L.OPTIONS_DATA_TEXT))
 		Dropdown("brokerMetric", Settings.VarType.String, L.OPTION_BROKER_METRIC, L.OPTION_BROKER_METRIC_TOOLTIP, {

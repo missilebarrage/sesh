@@ -1,4 +1,4 @@
-**Sesh** shows what every play session was worth. From login to logout it tracks the gold you make, the value of the items you pick up, experience, monsters slain, quests, dungeon runs and zones, and it keeps the same stats for every level. Look back by day, week, month or all time, compare your levels on a chart, find your best sessions and streaks, and share a session or a level in chat with a link other Sesh users can click to open.
+**Sesh** shows what every play session was worth. From login to logout it tracks the gold you make, the value of the items you pick up, experience, monsters slain, quests, dungeon runs and zones, and it keeps the same stats for every level. Look back by day, week, month or all time, compare your levels on a chart, find your best sessions and streaks, and post the numbers of a session or a level in chat.
 
 Made for **World of Warcraft: Forever**. There's nothing to set up: install it and play.
 
@@ -28,7 +28,7 @@ Made for **World of Warcraft: Forever**. There's nothing to set up: install it a
 - **Leveling** — your progress through the current level, with rested experience and when you'll level up; a chart comparing your levels by time, XP per hour, gold, kills, quests or deaths; and every level's full stats: time played, experience, gold, monsters, quests, dungeon runs, deaths and zones. When you level up, Sesh sums up the level in chat (only you see it).
 - **Dungeon runs** — each visit to a dungeon, with the bosses killed and how long it took.
 - **Summary** — all-time totals, an activity grid coloured by gold, XP or time played, personal records, daily streaks and your top items, monsters and zones.
-- **Sharing** — post a session or a level in chat and choose which numbers go in the message. Other players with Sesh can click the link to open the whole thing.
+- **Sharing** — post a session or a level in chat as one message, with the numbers you choose.
 - **Also tracked** — deaths, achievements and Legacy Points.
 - **Fits your UI** — a flat, minimal look inspired by EllesmereUI. When EllesmereUI is installed, Sesh follows its accent colour and font.
 - **Lightweight** — event-driven with no polling, virtualized lists, and compact storage that keeps years of history small.
@@ -62,20 +62,18 @@ Everything is in **Options > AddOns > Sesh** (or type `/sesh options`):
 - Forget empty sessions shorter than 1, 5 or 10 minutes, or keep them all
 - The first day of the week, and what the activity grid and the level chart show
 - Sum up finished levels in chat
-- Let other Sesh users open what you share
 - What the data text shows
 - Delete this character's history
 
 ## Privacy
 
-Everything is stored on your computer, in WoW's saved variables. Nothing is sent unless you share a session or a level: then the chat message you post and, when another Sesh user clicks it, the details of what you shared. Only what you shared in the last 30 days can be opened, and you can turn this off in the options.
+Everything is stored on your computer, in WoW's saved variables, and Sesh never sends anything on its own. Sharing puts a message in your chat box; you choose where it goes.
 
 ## Good to know
 
-- Stats are kept per character; settings apply to all your characters.
+- Stats are kept per character; settings apply to all your characters. A new character with the name of a deleted one starts fresh instead of getting the deleted character's history.
 - WoW saves addon data when you log out or reload. If the game crashes, the stats since then are lost.
 - Levels you played before installing Sesh aren't tracked. A level it saw only part of is marked "partly tracked", with how far into the level it started.
-- While the game locks chat for addons (in some instances), Sesh links stay plain text and shared sessions can't be opened until the lockdown ends.
 
 ## Feedback
 

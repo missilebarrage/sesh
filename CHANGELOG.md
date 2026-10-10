@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.0 — 2026-10-10
+
+- Sharing posts plain text: messages no longer start with a `[Sesh #42]` link, and other
+  players can't open your sessions or levels. The "Let other Sesh users open what I share"
+  option is gone, and Sesh no longer sends addon messages.
+- The level-up summary links the level itself: click `[Level 23]` to open it. Links only
+  appear in Sesh's own messages to you.
+- A new character with the name of a deleted one starts with a fresh history instead of the
+  deleted character's. Sesh now remembers which character its data belongs to; data saved
+  by 0.1.0 is kept unless it has seen a higher level than the character has.
+
 ## 0.1.0 — 2026-10-07
 
 First version.

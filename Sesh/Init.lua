@@ -21,11 +21,12 @@ Events.On("ADDON_LOADED", function(name)
 end)
 
 -- Separate handlers, so a failure in one part can't keep the others from starting.
+-- Database.ClaimCharacter runs first: it may clear data that belongs to another character.
 -- DataBroker runs before Options: the options page asks whether a data feed exists.
 for _, initialize in ipairs({
+	Database.ClaimCharacter,
 	Theme.Init,
 	Pricing.Init,
-	ns.Comm.Init,
 	ns.Links.Init,
 	DataBroker.Init,
 	ns.Options.Init,

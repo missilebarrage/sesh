@@ -2,7 +2,8 @@ local _, ns = ...
 
 --- SavedVariables: SeshDB (account-wide settings and window positions) and SeshCharDB
 --- (this character's sessions and levels). Data written by a newer Sesh is never
---- modified: the addon runs read-only and warns instead.
+--- modified: the addon runs read-only and warns instead. SeshCharDB also remembers which
+--- character it belongs to (see Database.ClaimCharacter).
 ---@class SeshDatabase
 local Database = ns.Database
 local Events = ns.Events
@@ -17,7 +18,6 @@ Database.DEFAULTS = {
 	minSessionMinutes = 5,
 	weekStart = 1, -- date("*t").wday numbering: 1 = Sunday, 2 = Monday
 	heatmapMetric = "gold", -- "gold" | "xp" | "time"
-	allowLinkRequests = true,
 	brokerMetric = "goldPerHour",
 	historyRange = "today",
 	listKind = "items",
@@ -149,6 +149,8 @@ local function InitAccount()
 		account.windows = {}
 	end
 	FillDefaults(account.settings)
+	-- Left over from before 0.2.0, when other players could open what a player shared.
+	account.settings.allowLinkRequests = nil
 	-- The game's calendar setting decides the first weekday until the user picks one.
 	if account.settings.weekStartChosen ~= true and type(CALENDAR_FIRST_WEEKDAY) == "number" then
 		account.settings.weekStart = CALENDAR_FIRST_WEEKDAY
@@ -168,11 +170,11 @@ local function InitCharacter()
 	if type(character.sessions) ~= "table" then
 		character.sessions = {}
 	end
-	for _, key in ipairs({ "shared", "levels", "sharedLevels" }) do
-		if type(character[key]) ~= "table" then
-			character[key] = {}
-		end
+	if type(character.levels) ~= "table" then
+		character.levels = {}
 	end
+	-- Left over from before 0.2.0, when other players could open what a player shared.
+	character.shared, character.sharedLevels = nil, nil
 	if type(character.nextId) ~= "number" then
 		local last = character.sessions[#character.sessions]
 		character.nextId = (last and last.id or 0) + 1
@@ -186,6 +188,54 @@ function Database.Init()
 	if accountReadOnly or characterReadOnly then
 		ns.Print(L.DATA_FROM_NEWER_VERSION)
 	end
+end
+
+-- The highest level the character's data has seen.
+local function HighestLevel(data)
+	local highest = 0
+	local function See(level)
+		if type(level) == "number" and level > highest then
+			highest = level
+		end
+	end
+	for _, record in ipairs(data.sessions) do
+		if type(record) == "table" then
+			See(record.endLevel)
+		end
+	end
+	if type(data.active) == "table" then
+		See(data.active.endLevel)
+	end
+	for level in pairs(data.levels) do
+		See(level)
+	end
+	return highest
+end
+
+--- Makes sure this character's data is its own. A character created with the name of a
+--- deleted one gets the deleted character's saved variables, so the data remembers whose
+--- it is and starts over for another character. Data saved before Sesh remembered that
+--- stays, unless it has seen a higher level than this character has. Called at
+--- PLAYER_LOGIN, before anything reads the character's data.
+function Database.ClaimCharacter()
+	local guid = ns.Str(UnitGUID("player"))
+	if not (character and guid and guid ~= "") then
+		return
+	end
+	local owner = ns.Str(character.guid)
+	local replaced
+	if owner then
+		replaced = owner ~= guid
+	else
+		local level = ns.Num(UnitLevel("player"))
+		replaced = level ~= nil and HighestLevel(character) > level
+	end
+	if replaced then
+		SeshCharDB = { schema = ns.SCHEMA }
+		InitCharacter()
+		ns.Print(L.CHARACTER_REPLACED)
+	end
+	character.guid = guid
 end
 
 --- This character's data, or nil while it is read-only (saved by a newer Sesh).

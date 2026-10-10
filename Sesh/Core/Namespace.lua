@@ -1,7 +1,6 @@
 local addonName, ns = ...
 
 ns.NAME = addonName
-ns.COMM_PREFIX = "Sesh"
 ns.SCHEMA = 1
 
 -- Every module table exists before any module file runs, so files can capture each other
@@ -22,9 +21,6 @@ ns.Progress = {}
 ns.Activity = {}
 ns.Kills = {}
 ns.Dungeons = {}
-ns.Shares = {}
-ns.Payload = {}
-ns.Comm = {}
 ns.Links = {}
 ns.Theme = {}
 ns.Widgets = {}
@@ -38,7 +34,6 @@ ns.LevelingView = {}
 ns.MainWindow = {}
 ns.MiniWindow = {}
 ns.ShareDialog = {}
-ns.SharedSessionWindow = {}
 ns.DataBroker = {}
 ns.Options = {}
 

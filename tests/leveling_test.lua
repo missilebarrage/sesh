@@ -72,13 +72,14 @@ describe("Leveling", function()
 		world:Advance(3000)
 		Helpers.SetXP(world, 11, 50, 1100)
 		local line = world.printed[#world.printed]
-		expect(line).toContain("Level 10 took 50m from 10%: 0 kills, 0 quests, 0 deaths.")
-		expect(line).toContain("|Haddon:Sesh:Tester-TestRealm:L10|h[Sesh Lv10]|h")
+		expect(line).toContain(
+			"|Haddon:Sesh:Tester-TestRealm:L10|h[Level 10]|h|r took 50m from 10%: 0 kills, 0 quests, 0 deaths."
+		)
 		local opened
 		ns.MainWindow.OpenLevel = function(level)
 			opened = level
 		end
-		world:ClickLink("addon:Sesh:Tester-TestRealm:L10", "[Sesh Lv10]")
+		world:ClickLink("addon:Sesh:Tester-TestRealm:L10", "[Level 10]")
 		expect(opened).toBe(10)
 
 		ns.Database.Set("announceLevels", false)
@@ -258,10 +259,8 @@ describe("Leveling", function()
 		world:Advance(600)
 		Helpers.SetXP(world, 11, 0, 1100)
 		world:Advance(600)
-		ns.Shares.Mark("level", 10, world.clock.server)
 		world.env.StaticPopupDialogs.SESH_DELETE_HISTORY.OnAccept()
 		expect(ns.Leveling.Records()[10]).toBeNil()
-		expect(ns.Shares.IsShared("level", 10, world.clock.server)).toBe(false)
 		expect(ns.Leveling.Current()).toBe(11)
 		local view = ns.Leveling.View(11, world.clock.server)
 		expect(ns.Session.Duration(view, world.clock.server)).toBe(0)

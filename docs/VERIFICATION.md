@@ -45,6 +45,8 @@ Record results under **Results** with the date and client build.
 - [ ] `/reload`: the same session continues (same #id, nothing counted twice).
 - [ ] Log out and back in within 5 minutes: the session continues. Log out for longer: the
       old session appears in History and a new one starts.
+- [ ] Delete a character that has Sesh history and create one with the same name: Sesh says
+      it started a fresh history, and History and Leveling are empty.
 
 ## 3. Interface
 
@@ -83,7 +85,7 @@ Record results under **Results** with the date and client build.
 
 - [ ] Leveling tab: the panel shows your level, the percentage and experience matching the
       game's XP bar, rested experience as a lighter part of the bar, and the time at the level.
-- [ ] Level up: the chat shows "Level N took …" with a `[Sesh LvN]` link that opens the level;
+- [ ] Level up: the chat shows "[Level N] took …", and clicking `[Level N]` opens the level;
       the chart gains a bar; the finished level's XP equals the level's requirement and the
       new level starts at the experience that spilled over.
 - [ ] Hover and click the chart's bars; switch the chart metric (remembered after `/reload`).
@@ -92,13 +94,10 @@ Record results under **Results** with the date and client build.
 ## 6. Sharing
 
 - [ ] Share dialog: checkboxes change the preview; Insert puts the text in the chat box.
-- [ ] Post in party/guild: your own link is clickable and opens the session.
-- [ ] Another character with Sesh clicks the link: the shared window shows the session.
-- [ ] Share a level from the Leveling tab: the message starts with `[Sesh LvN]`, and another
-      character with Sesh can open it.
+- [ ] Post in party/guild: the message is plain text, without a link.
+- [ ] Share a level from the Leveling tab: the message starts with "Level N".
 - [ ] After using a secure slash command (e.g. `/cast`) following an insert, no "action
       blocked" messages appear (no taint from inserting text).
-- [ ] With "Let other Sesh users open what I share" off, the other player sees the refusal.
 
 ## 7. Performance
 

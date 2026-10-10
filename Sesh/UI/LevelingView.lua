@@ -16,7 +16,6 @@ local Widgets = ns.Widgets
 local LevelChart = ns.LevelChart
 local SessionView = ns.SessionView
 local Links = ns.Links
-local Names = ns.Names
 local L = ns.L
 
 local HERO_HEIGHT = 70
@@ -485,7 +484,7 @@ end
 
 -- Level-up announcements --------------------------------------------------------------------
 
---- Prints how a finished level went, with a link that opens it. Only the player sees it.
+--- Prints how a finished level went; the level is a link that opens it. Only the player sees it.
 ---@param level integer
 function LevelingView.Announce(level)
 	local now = GetServerTime()
@@ -494,15 +493,16 @@ function LevelingView.Announce(level)
 		return
 	end
 	local metrics = Session.Metrics(view, now, Database.Get("excludeAfk"))
+	local link = Links.MakeLevelLink(level)
 	local took = Format.Duration(metrics.duration)
-	local lead = view.fromPercent and L.ANNOUNCE_PARTIAL:format(level, took, view.fromPercent)
-		or L.ANNOUNCE:format(level, took)
+	local lead = view.fromPercent and L.ANNOUNCE_PARTIAL:format(link, took, view.fromPercent)
+		or L.ANNOUNCE:format(link, took)
 	local details = { Format.Count(metrics.kills, L.COUNT_KILLS), Format.Count(metrics.quests, L.COUNT_QUESTS) }
 	if metrics.dungeons > 0 then
 		details[#details + 1] = Format.Count(metrics.dungeons, L.COUNT_DUNGEON_RUNS)
 	end
 	details[#details + 1] = Format.Count(metrics.deaths, L.COUNT_DEATHS)
-	ns.Print(lead .. " " .. table.concat(details, ", ") .. ".  " .. Links.MakeLevelLink(Names.PlayerFullName(), level))
+	ns.Print(lead .. " " .. table.concat(details, ", ") .. ".")
 end
 
 Events.On("SESH_LEVEL_UP", function(level)

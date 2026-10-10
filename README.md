@@ -5,8 +5,8 @@ session of every character — from login to logout — and shows what it was wo
 value of the items you picked up, experience, monsters slain, quests, dungeon runs, zones and
 more. It also keeps the same stats for every level: how long each level took and what you did
 in it. Look back by day, week, month or all time, compare your levels on a chart, see your
-best sessions and streaks on a summary page with an activity grid, and share a session or a
-level in chat with a link other Sesh users can open.
+best sessions and streaks on a summary page with an activity grid, and post the numbers of a
+session or a level in chat.
 
 ## Features
 
@@ -30,8 +30,8 @@ level in chat with a link other Sesh users can open.
 - **Dungeon runs** — each visit to a dungeon with the bosses killed and how long it took.
 - **Summary** — all-time totals, a GitHub-style activity grid coloured by gold, XP or time
   played, personal records, daily streaks and your top items, monsters and zones.
-- **Sharing** — post a session or a level to chat (you choose which numbers go in the
-  message). Other players with Sesh can click the link to open the whole thing.
+- **Sharing** — post a session or a level to chat as one message, with the numbers you
+  choose.
 - **Fits your UI** — a flat, minimal look inspired by EllesmereUI; when EllesmereUI is
   installed, Sesh follows its accent colour and font.
 - **Light** — event-driven with no polling, virtualized lists, and compact storage that keeps
@@ -68,6 +68,8 @@ level in chat with a link other Sesh users can open.
 - A **dungeon run** lasts from entering a dungeon until you've been out of it for 15 minutes,
   so a corpse run after a wipe doesn't split it. It counts once a boss dies or after 5 minutes
   inside. The game doesn't say when a dungeon is "complete", so runs show the bosses killed.
+- **History belongs to its character.** A new character with the name of a deleted one gets
+  the deleted character's saved data from the game; Sesh notices and starts it fresh.
 
 ## Commands
 
@@ -88,10 +90,8 @@ minimap and, if you use a data-bar addon, as a data text.
 
 ## Privacy
 
-Everything is stored locally in your saved variables. Nothing is sent unless you share a
-session or a level: then the chat message you post, and — when another Sesh user clicks it —
-its details. Only what you shared in the last 30 days can be opened, and you can turn this
-off in the options.
+Everything is stored locally in your saved variables, and Sesh never sends anything on its
+own. Sharing puts a message in your chat box; you choose where it goes.
 
 ## Development
 

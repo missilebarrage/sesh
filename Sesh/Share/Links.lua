@@ -1,47 +1,22 @@
 local _, ns = ...
 
---- Sharing sessions and levels in chat.
+--- Chat text for sharing sessions and levels, and the level links in Sesh's own messages.
 ---
---- The sender's message is plain text, e.g. "[Sesh #42] Current Session: 10g earned" or
---- "[Sesh Lv23] Level 23 (2h 41m): 212 kills". Every Sesh user's chat filter turns the
---- "[Sesh #42]" and "[Sesh Lv23]" tokens into local addon links that remember who sent
---- them; clicking one opens the session or level (requested over Comm when it belongs
---- to someone else). Players without Sesh just see the text.
+--- Shared messages are plain text, e.g. "Current Session (2h 41m): 10g earned (4g/hour)" or
+--- "Level 23 (2h 41m): 212 kills". Links only appear in what Sesh prints for the player,
+--- like the level-up summary, and open the level in Sesh.
 ---@class SeshLinks
 local Links = ns.Links
 local Database = ns.Database
 local Session = ns.Session
-local Shares = ns.Shares
 local Format = ns.Format
 local Names = ns.Names
 local Theme = ns.Theme
 local L = ns.L
 
-local TOKEN = "[Sesh "
-local SESSION_TOKEN_PATTERN = "%[Sesh #(%d%d?%d?%d?%d?%d?%d?)%]"
-local LEVEL_TOKEN_PATTERN = "%[Sesh Lv(%d%d?%d?)%]"
-local LINK_PATTERN = "^addon:Sesh:([^:|]+):(L?)(%d+)$"
+local LINK_PATTERN = "^addon:Sesh:([^:|]+):L(%d+)$"
 local MAX_CHAT_BYTES = 255
-local MAX_LINKS_PER_MESSAGE = 3
 local SEPARATOR = " · "
-
--- Chat types whose messages may carry shared links. Battle.net and community channels
--- are left alone: their senders can't receive addon whispers.
-local FILTER_EVENTS = {
-	"CHAT_MSG_SAY",
-	"CHAT_MSG_YELL",
-	"CHAT_MSG_PARTY",
-	"CHAT_MSG_PARTY_LEADER",
-	"CHAT_MSG_RAID",
-	"CHAT_MSG_RAID_LEADER",
-	"CHAT_MSG_INSTANCE_CHAT",
-	"CHAT_MSG_INSTANCE_CHAT_LEADER",
-	"CHAT_MSG_GUILD",
-	"CHAT_MSG_OFFICER",
-	"CHAT_MSG_WHISPER",
-	"CHAT_MSG_WHISPER_INFORM",
-	"CHAT_MSG_CHANNEL",
-}
 
 --- Metrics a player can include in the chat text for a session, in display order.
 Links.FIELDS = {
@@ -162,16 +137,6 @@ local LEVEL_ORDER = {
 	"legacy",
 }
 
---- The chat token for a view: "[Sesh #42]" for a session, "[Sesh Lv23]" for a level.
----@param view SeshView
----@return string
-function Links.Token(view)
-	if view.level then
-		return TOKEN .. "Lv" .. view.level .. "]"
-	end
-	return TOKEN .. "#" .. view.id .. "]"
-end
-
 local function Label(view, metrics, fields)
 	local label
 	if view.level then
@@ -194,13 +159,13 @@ end
 
 --- Builds the chat message for a session or level. Metrics that would push it past the
 --- chat limit are dropped from the end.
----@param view SeshView a session (it needs an id) or a level
+---@param view SeshView a session or a level
 ---@param fields table<string, boolean> which metrics to include
 ---@return string text
 ---@return integer dropped how many metrics didn't fit
 function Links.ChatText(view, fields, now, excludeAfk)
 	local metrics = Session.Metrics(view, now, excludeAfk)
-	local head = Links.Token(view) .. " " .. Label(view, metrics, fields) .. ":"
+	local head = Label(view, metrics, fields) .. ":"
 	local segments = {}
 	for _, name in ipairs(view.level and LEVEL_ORDER or SESSION_ORDER) do
 		segments[#segments + 1] = SEGMENTS[name](metrics, fields)
@@ -228,57 +193,24 @@ function Links.Insert(text)
 	end
 end
 
---- Shares a session or level: allows others to open it and writes the message into chat.
+--- Shares a session or level: writes its message into chat.
 ---@param view SeshView
 ---@param fields table<string, boolean>
 ---@return string text
 ---@return integer dropped
 function Links.Share(view, fields)
-	local now = GetServerTime()
-	local text, dropped = Links.ChatText(view, fields, now, Database.Get("excludeAfk"))
-	if view.level then
-		Shares.Mark("level", view.level, now)
-	else
-		Shares.Mark("session", view.id, now)
-	end
+	local text, dropped = Links.ChatText(view, fields, GetServerTime(), Database.Get("excludeAfk"))
 	Links.Insert(text)
 	return text, dropped
 end
 
---- The clickable link inserted in place of a "[Sesh #id]" token.
----@param owner string
----@param id string|integer
+--- A link that opens one of the player's levels, for messages Sesh prints for the player.
+--- It names the character, so a link left in chat from another character does nothing.
+---@param level integer
 ---@return string
-function Links.MakeLink(owner, id)
-	return "|cff" .. Theme.AccentHex() .. "|Haddon:Sesh:" .. owner .. ":" .. id .. "|h[Sesh #" .. id .. "]|h|r"
-end
-
---- The clickable link inserted in place of a "[Sesh Lv23]" token.
----@param owner string
----@param level string|integer
----@return string
-function Links.MakeLevelLink(owner, level)
-	return "|cff" .. Theme.AccentHex() .. "|Haddon:Sesh:" .. owner .. ":L" .. level .. "|h[Sesh Lv" .. level .. "]|h|r"
-end
-
-local function Filter(_, event, message, author, ...)
-	if type(message) ~= "string" or not message:find(TOKEN, 1, true) then
-		return false
-	end
-	-- The sender's name exactly as chat has it: it's also the address to ask for the share.
-	local owner = event == "CHAT_MSG_WHISPER_INFORM" and Names.PlayerFullName() or ns.Str(author)
-	if not owner or owner == "" or owner:find("[:|]") then
-		return false
-	end
-	local converted, sessions = message:gsub(SESSION_TOKEN_PATTERN, function(id)
-		return Links.MakeLink(owner, id)
-	end, MAX_LINKS_PER_MESSAGE)
-	if sessions < MAX_LINKS_PER_MESSAGE then
-		converted = converted:gsub(LEVEL_TOKEN_PATTERN, function(level)
-			return Links.MakeLevelLink(owner, level)
-		end, MAX_LINKS_PER_MESSAGE - sessions)
-	end
-	return false, converted, author, ...
+function Links.MakeLevelLink(level)
+	local text = "[" .. L.LEVEL_N:format(level) .. "]"
+	return ("|cff%s|Haddon:Sesh:%s:L%d|h%s|h|r"):format(Theme.AccentHex(), Names.PlayerFullName(), level, text)
 end
 
 local function OnLinkClicked(_, link)
@@ -286,25 +218,13 @@ local function OnLinkClicked(_, link)
 	if not link then
 		return
 	end
-	local owner, levelMark, id = link:match(LINK_PATTERN)
-	if not owner then
-		return
-	end
-	id = tonumber(id)
-	local kind = levelMark == "L" and "level" or "session"
-	if not Names.IsPlayer(owner) then
-		ns.SharedSessionWindow.Open(owner, kind, id)
-	elseif kind == "level" then
-		ns.MainWindow.OpenLevel(id)
-	else
-		ns.MainWindow.OpenSession(id)
+	local owner, level = link:match(LINK_PATTERN)
+	if owner and Names.IsPlayer(owner) then
+		ns.MainWindow.OpenLevel(tonumber(level))
 	end
 end
 
---- Installs the chat filters and the link click handler. Called at PLAYER_LOGIN.
+--- Installs the link click handler. Called at PLAYER_LOGIN.
 function Links.Init()
-	for _, event in ipairs(FILTER_EVENTS) do
-		ChatFrameUtil.AddMessageEventFilter(event, Filter)
-	end
 	EventRegistry:RegisterCallback("SetItemRef", OnLinkClicked, Links)
 end

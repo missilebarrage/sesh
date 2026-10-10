@@ -55,12 +55,10 @@ files["Sesh/**/*.lua"] = {
 		"BaseScrollBoxEvents",
 		-- Game API.
 		"C_AddOns",
-		"C_ChatInfo",
 		"C_Container",
 		"C_CreatureInfo",
 		"C_Secrets",
 		"C_TooltipInfo",
-		"C_EncodingUtil",
 		"C_Item",
 		"C_QuestLog",
 		"C_Texture",

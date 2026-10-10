@@ -9,7 +9,6 @@ local Session = ns.Session
 local Stats = ns.Stats
 local Events = ns.Events
 local Recorder = ns.Recorder
-local Shares = ns.Shares
 
 --- Range keys for History.Bounds / History.Query, in display order.
 History.RANGES = { "today", "week", "month", "quarter", "all" }
@@ -104,7 +103,6 @@ function History.Delete(id)
 	end
 	local char = Char()
 	table.remove(char.sessions, index)
-	Shares.Forget("session", id)
 	local lifetime = Session.NewAggregate()
 	Session.Accumulate(lifetime, History.Lifetime())
 	Session.Accumulate(lifetime, Session.View(record), -1)
@@ -120,7 +118,6 @@ function History.DeleteAll()
 	end
 	char.sessions = {}
 	char.lifetime = nil
-	Shares.ForgetAll("session")
 	Changed()
 end
 

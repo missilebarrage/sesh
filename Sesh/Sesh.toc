@@ -28,9 +28,6 @@ Tracking\Progress.lua
 Tracking\Activity.lua
 Tracking\Kills.lua
 Tracking\Dungeons.lua
-Share\Shares.lua
-Share\Payload.lua
-Share\Comm.lua
 Share\Links.lua
 UI\Theme.lua
 UI\Widgets.lua
@@ -42,7 +39,6 @@ UI\HistoryView.lua
 UI\SummaryView.lua
 UI\LevelingView.lua
 UI\ShareDialog.lua
-UI\SharedSessionWindow.lua
 UI\MainWindow.lua
 UI\MiniWindow.lua
 UI\DataBroker.lua

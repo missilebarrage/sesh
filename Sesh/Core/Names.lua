@@ -91,10 +91,3 @@ end
 function Names.IsPlayer(name)
 	return Names.Same(name, Names.PlayerFullName())
 end
-
---- "First Surname-Realm" -> "First Surname".
----@param fullName string
----@return string
-function Names.WithoutRealm(fullName)
-	return (fullName:gsub("%-.*$", ""))
-end
