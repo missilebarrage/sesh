@@ -89,6 +89,8 @@ Record results under **Results** with the date and client build.
       the chart gains a bar; the finished level's XP equals the level's requirement and the
       new level starts at the experience that spilled over.
 - [ ] Hover and click the chart's bars; switch the chart metric (remembered after `/reload`).
+- [ ] Hovering a level (chart, list or the progress panel) shows "Level K to N" with the time
+      to reach it; after the second tracked level-up, the chat summary ends with it too.
 - [ ] `/reload` and a quick relog keep the current level's time going without jumps.
 
 ## 6. Sharing

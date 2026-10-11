@@ -219,6 +219,7 @@ L.PROGRESS_TIME = "%s at this level"
 L.PROGRESS_LEVEL_UP_IN = "level %d in %s"
 L.LEVEL_IN_PROGRESS_PERCENT = "In progress · %d%%"
 L.PARTLY_TRACKED = "(partly tracked)"
+L.LEVEL_TO_LEVEL = "Level %d to %d"
 L.LEVEL_ROW_DETAIL = "%s · %s kills · %s quests"
 L.LEVELING_EMPTY = "Your levels show up here as you level up with Sesh running."
 L.LEVEL_CHART_EMPTY = "Nothing to compare yet."
@@ -237,6 +238,8 @@ L.LEVEL_UNFINISHED_NOTE = "Sesh didn't see this level end, so some of it may be 
 -- %s is a link to the level (L.LEVEL_N).
 L.ANNOUNCE = "%s took %s:"
 L.ANNOUNCE_PARTIAL = "%s took %s from %d%%:"
+L.ANNOUNCE_JOURNEY = "Level %d to %d: %s."
+L.ANNOUNCE_JOURNEY_PARTLY = "Level %d to %d: %s (partly tracked)."
 
 -- Mini window.
 L.MINI_SESSION = "Session time"

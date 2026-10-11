@@ -88,6 +88,55 @@ describe("Leveling", function()
 		expect(#world.printed).toBe(printed)
 	end)
 
+	it("adds up how long it took to reach each level", function()
+		local world, ns = Harness.Boot({
+			configure = function(w)
+				w.player.level, w.player.xp, w.player.xpMax = 1, 0, 400
+			end,
+		})
+		world:Advance(600)
+		Helpers.SetXP(world, 2, 0, 900)
+		world:Advance(1200)
+		Helpers.SetXP(world, 3, 0, 1400)
+		world:Advance(300)
+		local rows = ns.Leveling.Rows(world.clock.server, true)
+		expect(rows[1].journey).toBeNil()
+		expect(rows[2].journey).toEqual({ from = 1, seconds = 600, partly = false })
+		expect(rows[3].journey).toEqual({ from = 1, seconds = 1800, partly = false })
+
+		-- A level Sesh missed leaves a gap.
+		ns.Leveling.Records()[2] = nil
+		rows = ns.Leveling.Rows(world.clock.server, true)
+		expect(rows[2].journey).toEqual({ from = 1, seconds = 600, partly = true })
+	end)
+
+	it("says when the climb was only partly tracked", function()
+		local world, ns = Harness.Boot()
+		world:Advance(600)
+		Helpers.SetXP(world, 11, 0, 1100)
+		world:Advance(900)
+		Helpers.SetXP(world, 12, 0, 1200)
+		local rows = ns.Leveling.Rows(world.clock.server, true)
+		-- Sesh started at 10% into level 10.
+		expect(rows[3].journey).toEqual({ from = 10, seconds = 1500, partly = true })
+		expect(world.printed[#world.printed]).toContain("Level 10 to 12: 25m (partly tracked).")
+	end)
+
+	it("ends the level-up summary with the climb, up to the level cap", function()
+		local world = Harness.Boot({
+			configure = function(w)
+				w.player.level, w.player.xp, w.player.xpMax = 58, 0, 1000
+			end,
+		})
+		world:Advance(600)
+		Helpers.SetXP(world, 59, 0, 1100)
+		-- Only one level so far: the summary already says how long it took.
+		expect(world.printed[#world.printed]:find("Level 58 to 59", 1, true)).toBeNil()
+		world:Advance(1200)
+		Helpers.SetXP(world, 60, 0, 1200)
+		expect(world.printed[#world.printed]).toContain("0 deaths. Level 58 to 60: 30m.")
+	end)
+
 	it("adds up a level over several sessions without counting reloads twice", function()
 		local world = Harness.Boot()
 		Helpers.GainMoney(world, 100)

@@ -25,7 +25,7 @@ Made for **World of Warcraft: Forever**. There's nothing to set up: install it a
 - **The current session at a glance** — gold earned and gold per hour, experience and XP per hour with time to level, duration, monsters slain, quests and zones, plus lists of every item, monster, quest, zone and dungeon run, with icons.
 - **Item value** — every item you get is worth its auction house price from Auctionator, or its vendor price when there's no auction price. Without Auctionator, Sesh uses vendor prices.
 - **History** — Today, This week, This month, Past 3 months and All time, each with its totals and its list of sessions. Open any session to see it in full, share it or delete it.
-- **Leveling** — your progress through the current level, with rested experience and when you'll level up; a chart comparing your levels by time, XP per hour, gold, kills, quests or deaths; and every level's full stats: time played, experience, gold, monsters, quests, dungeon runs, deaths and zones. When you level up, Sesh sums up the level in chat (only you see it).
+- **Leveling** — your progress through the current level, with rested experience and when you'll level up; a chart comparing your levels by time, XP per hour, gold, kills, quests or deaths; and every level's full stats: time played, experience, gold, monsters, quests, dungeon runs, deaths and zones. Hover a level to see how long the whole climb to it took ("Level 1 to 10"). When you level up, Sesh sums up the level and the climb so far in chat (only you see it).
 - **Dungeon runs** — each visit to a dungeon, with the bosses killed and how long it took.
 - **Summary** — all-time totals, an activity grid coloured by gold, XP or time played, personal records, daily streaks and your top items, monsters and zones.
 - **Sharing** — post a session or a level in chat as one message, with the numbers you choose.
@@ -49,6 +49,7 @@ Made for **World of Warcraft: Forever**. There's nothing to set up: install it a
 - **Monsters slain** counts killing blows by you and your group; critters don't count. In some instances the game hides which monster died: those kills still count, as "Unidentified".
 - **A session** runs from login to logout and survives /reload. Logging back in on the same character within a few minutes continues it (configurable), so a disconnect doesn't split a dungeon run.
 - **A level's time** is the time you played at that level, over all sessions. The experience that finishes a level counts toward it; whatever spills over counts toward the next one.
+- **The time to reach a level** adds up the time played at every level before it, from the first level Sesh tracked. It's marked "partly tracked" when Sesh missed some of that time, for example when it was installed partway into a level.
 - **A dungeon run** lasts from entering a dungeon until you've been out of it for 15 minutes, so a corpse run after a wipe doesn't split it. The game doesn't say when a dungeon is complete, so runs show the bosses killed.
 
 ## Options

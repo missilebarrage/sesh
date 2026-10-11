@@ -25,8 +25,9 @@ session or a level in chat.
 - **Leveling** — your progress through the current level (with rested experience and when
   you'll level up), a chart comparing your levels by time, XP per hour, gold, kills, quests or
   deaths, and every level's full stats: time played, experience, gold, monsters, quests,
-  dungeon runs, deaths and zones. When you level up, Sesh sums up the level in chat (only
-  you see it).
+  dungeon runs, deaths and zones. Hover a level to see how long the whole climb to it took
+  ("Level 1 to 10"). When you level up, Sesh sums up the level and the climb so far in chat
+  (only you see it).
 - **Dungeon runs** — each visit to a dungeon with the bosses killed and how long it took.
 - **Summary** — all-time totals, a GitHub-style activity grid coloured by gold, XP or time
   played, personal records, daily streaks and your top items, monsters and zones.
@@ -65,6 +66,9 @@ session or a level in chat.
   Levels start being tracked when Sesh is installed: a level it saw only part of is marked
   "partly tracked" with how far into the level it started. Level stats are kept apart from
   History: deleting a single session doesn't change them.
+- The **time to reach a level** adds up the time played at every level before it, starting
+  from the first level Sesh tracked. It's marked "partly tracked" when Sesh missed some of
+  that time: it was installed partway into a level, or a level was played without it.
 - A **dungeon run** lasts from entering a dungeon until you've been out of it for 15 minutes,
   so a corpse run after a wipe doesn't split it. It counts once a boss dies or after 5 minutes
   inside. The game doesn't say when a dungeon is "complete", so runs show the bosses killed.

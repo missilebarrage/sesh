@@ -267,6 +267,13 @@ end
 ---@field dungeons integer
 ---@field deaths integer
 ---@field sessions integer
+---@field journey SeshLevelJourney? how long it took to reach the level (nil for the first tracked level)
+
+---@class SeshLevelJourney
+---@field from integer the first level Sesh tracked
+---@field seconds integer time played from there until reaching the level
+---@field partly boolean some of that time wasn't tracked (Sesh started partway into the first
+---level, or missed a level or the end of one)
 
 ---@param source table a level record or view (both have the totals under the same names)
 local function Row(source, level, duration, afk, excludeAfk)
@@ -288,6 +295,26 @@ local function Row(source, level, duration, afk, excludeAfk)
 		deaths = source.deaths or 0,
 		sessions = source.sessionCount or 0,
 	}
+end
+
+-- The climb to a level: the time played at every tracked level below it.
+---@param rows SeshLevelRow[] lowest level first
+---@param level integer
+---@return SeshLevelJourney?
+local function JourneyTo(rows, level)
+	local seconds, partly, below = 0, false, nil
+	for _, row in ipairs(rows) do
+		if row.level >= level then
+			break
+		end
+		seconds = seconds + row.duration
+		partly = partly or row.partial or (below ~= nil and below.level + 1 ~= row.level)
+		below = row
+	end
+	if not below then
+		return nil
+	end
+	return { from = rows[1].level, seconds = seconds, partly = partly or below.level + 1 ~= level }
 end
 
 --- One row per tracked level, lowest level first, with the numbers the level list and
@@ -319,5 +346,17 @@ function Leveling.Rows(now, excludeAfk)
 	table.sort(rows, function(a, b)
 		return a.level < b.level
 	end)
+	for _, row in ipairs(rows) do
+		row.journey = JourneyTo(rows, row.level)
+	end
 	return rows, current
+end
+
+--- How long it took to reach a level, from the first level Sesh tracked. Works for a
+--- level that has no row yet, like the level cap just reached.
+---@param level integer
+---@param now integer
+---@return SeshLevelJourney?
+function Leveling.Journey(level, now)
+	return JourneyTo((Leveling.Rows(now, false)), level)
 end

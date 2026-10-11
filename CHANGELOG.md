@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0 — 2026-10-11
+
+- Leveling shows how long it took to reach each level, counted from the first level Sesh
+  tracked: hover a level in the chart or the list ("Level 1 to 10: 5h 12m"). The level-up
+  summary in chat ends with the climb so far, all the way to the level cap.
+
 ## 0.2.0 — 2026-10-10
 
 - Sharing posts plain text: messages no longer start with a `[Sesh #42]` link, and other

@@ -93,6 +93,12 @@ local function FillLevelTooltip(row)
 	GameTooltip:SetText(L.LEVEL_N:format(row.level), 1, 1, 1)
 	AddLine(L.CARD_TIME_PLAYED, Format.Duration(row.duration))
 	AddLine(L.ACTIVE_TIME, Format.Duration(row.activeSeconds))
+	local journey = row.journey
+	if journey then
+		-- How long it took to get here: "Level 1 to 10".
+		local label = L.LEVEL_TO_LEVEL:format(journey.from, row.level)
+		AddLine(journey.partly and (label .. " " .. L.PARTLY_TRACKED) or label, Format.Duration(journey.seconds))
+	end
 	if row.xpPerHour then
 		AddLine(L.CARD_XP_PER_HOUR, Format.Integer(row.xpPerHour))
 	end
@@ -485,8 +491,11 @@ end
 -- Level-up announcements --------------------------------------------------------------------
 
 --- Prints how a finished level went; the level is a link that opens it. Only the player sees it.
----@param level integer
-function LevelingView.Announce(level)
+--- Ends with how long the climb from the first tracked level took, once that's more than
+--- this one level.
+---@param level integer the finished level
+---@param reached integer the level the character is at now
+function LevelingView.Announce(level, reached)
 	local now = GetServerTime()
 	local view = Leveling.View(level, now)
 	if not view then
@@ -502,11 +511,17 @@ function LevelingView.Announce(level)
 		details[#details + 1] = Format.Count(metrics.dungeons, L.COUNT_DUNGEON_RUNS)
 	end
 	details[#details + 1] = Format.Count(metrics.deaths, L.COUNT_DEATHS)
-	ns.Print(lead .. " " .. table.concat(details, ", ") .. ".")
+	local text = lead .. " " .. table.concat(details, ", ") .. "."
+	local journey = Leveling.Journey(reached, now)
+	if journey and journey.from < level then
+		local sentence = journey.partly and L.ANNOUNCE_JOURNEY_PARTLY or L.ANNOUNCE_JOURNEY
+		text = text .. " " .. sentence:format(journey.from, reached, Format.Duration(journey.seconds))
+	end
+	ns.Print(text)
 end
 
-Events.On("SESH_LEVEL_UP", function(level)
+Events.On("SESH_LEVEL_UP", function(level, reached)
 	if Database.Get("announceLevels") then
-		LevelingView.Announce(level)
+		LevelingView.Announce(level, reached)
 	end
 end)
